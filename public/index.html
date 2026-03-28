@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DriveDeck</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <section id="screen-link" class="screen active screen-link">
+        <div class="screen-hud hud-top">
+          <div class="brand-lockup">DRIVEDECK</div>
+          <div class="hud-live">
+            <span class="live-dot"></span>
+            PHONE PAIRING
+          </div>
+        </div>
+
+        <div class="link-stage">
+          <div class="qr-shell">
+            <img id="pairing-qr" class="pairing-qr" alt="QR code for remote pairing" />
+            <div class="pairing-copy">
+              <p class="link-instruction">Scan this with your phone to send over a folder link.</p>
+              <p id="pairing-code-label" class="pairing-code-label">YOUR CODE APPEARS AFTER YOU SUBMIT ON PHONE</p>
+              <p id="pairing-link" class="pairing-link">Preparing your pairing link...</p>
+            </div>
+          </div>
+
+          <form id="code-form" class="link-form">
+            <input
+              id="pairing-code-input"
+              name="pairing-code-input"
+              type="text"
+              inputmode="numeric"
+              maxlength="6"
+              placeholder="ENTER YOUR 6 DIGIT CODE"
+              required
+            />
+            <button id="pairing-code-submit" type="submit" class="primary-cta link-submit-button">
+              Continue
+            </button>
+          </form>
+          <p class="link-instruction">
+            Once you get a code on your phone, pop it in here and we’ll take it from there.
+          </p>
+          <button id="open-direct-link" type="button" class="text-link-button">
+            Prefer typing the Google Drive link yourself? Start here.
+          </button>
+          <div id="status" class="status-line"></div>
+          <div id="loading-indicator" class="loading-indicator hidden">
+            <span class="loading-spinner" aria-hidden="true"></span>
+            <span id="loading-copy">This can take a little while for larger folders. Your photos will show up soon.</span>
+          </div>
+        </div>
+
+        <div class="screen-hud hud-bottom">
+          <div class="hud-stat">
+            <span class="hud-label">INPUT MODE</span>
+            <span class="hud-value">PAIR WITH PHONE</span>
+          </div>
+          <div class="hud-stat">
+            <span class="hud-label">DRIVEDECK STATUS</span>
+            <span id="system-status" class="hud-value">READY WHEN YOU ARE</span>
+          </div>
+        </div>
+      </section>
+
+      <section id="screen-direct-link" class="screen screen-link">
+        <div class="screen-hud hud-top">
+          <div class="brand-lockup">DRIVEDECK</div>
+          <div class="hud-live">
+            <span class="live-dot"></span>
+            TYPE IT HERE
+          </div>
+        </div>
+
+        <div class="link-stage">
+          <form id="direct-link-form" class="link-form direct-link-form">
+            <input
+              id="direct-link-input"
+              name="direct-link-input"
+              type="url"
+              placeholder="PASTE YOUR GOOGLE DRIVE LINK HERE"
+              required
+            />
+          </form>
+          <p class="link-instruction">
+            Paste the public Google Drive folder link here and we’ll open it for you.
+          </p>
+          <button id="back-to-pairing" type="button" class="text-link-button">
+            Already have a pairing code? Enter it here.
+          </button>
+          <button id="direct-back-button" type="button" class="text-link-button secondary-text-link">
+            Go back
+          </button>
+          <div id="direct-status" class="status-line"></div>
+          <div id="direct-loading-indicator" class="loading-indicator hidden">
+            <span class="loading-spinner" aria-hidden="true"></span>
+            <span id="direct-loading-copy">We’re getting everything ready. This can take a little while for larger folders.</span>
+          </div>
+        </div>
+
+        <div class="screen-hud hud-bottom">
+          <div class="hud-stat">
+            <span class="hud-label">INPUT MODE</span>
+            <span class="hud-value">DIRECT LINK</span>
+          </div>
+          <div class="hud-stat">
+            <span class="hud-label">DRIVEDECK STATUS</span>
+            <span class="hud-value">READY WHEN YOU ARE</span>
+          </div>
+        </div>
+      </section>
+
+      <section id="screen-folders" class="screen workspace-screen folders-screen">
+        <div class="workspace-main">
+          <div class="screen-hud hud-top">
+            <div class="brand-lockup">DRIVEDECK</div>
+            <div class="hud-actions">
+              <button id="toggle-folder-panel" type="button" class="icon-action" aria-label="Open folder details">⚙</button>
+              <button id="back-to-link" type="button" class="icon-action">←</button>
+            </div>
+          </div>
+
+          <div class="workspace-stage">
+            <div class="workspace-copy">
+              <p class="eyebrow-meta">DRIVEDECK // FOLDER BROWSER</p>
+              <h1 id="folders-title" class="display-title">CHOOSE A FOLDER</h1>
+              <p id="folders-subtitle" class="workspace-subtitle">
+                Pick the folder you’d like to show on screen.
+              </p>
+            </div>
+
+            <div id="folder-tree" class="folder-sequence">
+              <div class="empty-sequence">Your folders will appear here in a moment.</div>
+            </div>
+          </div>
+
+          <div class="screen-hud hud-bottom">
+            <div class="hud-stat">
+              <span class="hud-label">CURRENT PATH</span>
+              <span id="folder-path-status" class="hud-value">PATH: //</span>
+            </div>
+            <div class="hud-stat">
+              <span class="hud-label">FOLDERS</span>
+              <span id="folder-count" class="hud-value">0</span>
+            </div>
+          </div>
+        </div>
+
+        <aside id="folder-side-panel" class="workspace-side">
+          <div class="side-panel">
+            <div class="slideshow-settings-head">
+              <button id="close-folder-panel" type="button" class="icon-action icon-action-close-panel" aria-label="Close folder details">
+                Close
+              </button>
+            </div>
+            <p class="side-title">DRIVEDECK</p>
+            <p class="side-subtitle">FOLDER PICKER</p>
+
+            <div class="side-group">
+              <div class="side-row">
+                <span class="side-key">Selected folder</span>
+                <span id="selected-folder-name" class="side-value">Nothing selected yet</span>
+              </div>
+              <div class="side-row">
+                <span class="side-key">Path</span>
+                <span id="selected-folder-path" class="side-value side-value-path">/</span>
+              </div>
+              <div class="side-row">
+                <span class="side-key">Photos inside</span>
+                <span id="selected-folder-count" class="side-value">0 photos</span>
+              </div>
+            </div>
+
+            <div class="side-group side-group-compact">
+              <span class="side-key">What happens next</span>
+              <span class="side-value">Choose a folder, browse the grid, then start the slideshow</span>
+            </div>
+
+            <button id="continue-to-gallery" type="button" class="primary-cta">
+              Open Selected Folder
+            </button>
+          </div>
+        </aside>
+      </section>
+
+      <section id="screen-gallery" class="screen workspace-screen">
+        <div class="workspace-main">
+          <div class="screen-hud hud-top">
+            <div class="brand-lockup">DRIVEDECK</div>
+            <div class="hud-actions">
+              <button id="back-to-folders" type="button" class="icon-action">←</button>
+            </div>
+          </div>
+
+          <div class="workspace-stage">
+            <div class="workspace-copy">
+              <p class="eyebrow-meta">DRIVEDECK // PHOTO GRID</p>
+              <h1 class="display-title">PHOTO GRID</h1>
+              <p id="gallery-heading-copy" class="workspace-subtitle">
+                Pick any photo to start the slideshow.
+              </p>
+            </div>
+
+            <div id="gallery" class="gallery-grid">
+              <div class="empty-sequence">Your photos will show up here shortly.</div>
+            </div>
+          </div>
+
+          <div class="screen-hud hud-bottom">
+            <div class="hud-stat">
+              <span class="hud-label">CURRENT FOLDER</span>
+              <span id="gallery-folder-path" class="hud-value">PATH: //</span>
+            </div>
+            <div class="hud-stat">
+              <span class="hud-label">MEDIA COUNT</span>
+              <span id="photo-count" class="hud-value">0</span>
+            </div>
+          </div>
+        </div>
+
+        <aside class="workspace-side">
+          <div class="side-panel">
+            <p class="side-title">DRIVEDECK</p>
+            <p class="side-subtitle">SLIDESHOW SETUP</p>
+
+            <div class="side-group">
+              <div class="side-row">
+                <span class="side-key">Duration</span>
+                <span id="duration-readout" class="side-value">8.0s</span>
+              </div>
+              <div class="counter-control">
+                <button id="duration-decrease" type="button" class="counter-button" aria-label="Decrease duration">-</button>
+                <div id="duration-count" class="counter-value" aria-live="polite">8s</div>
+                <button id="duration-increase" type="button" class="counter-button" aria-label="Increase duration">+</button>
+              </div>
+            </div>
+
+            <label class="toggle-row">
+              <span class="side-key">Repeat slideshow</span>
+              <input id="loop-input" type="checkbox" />
+            </label>
+
+            <label class="toggle-row">
+              <span class="side-key">Play automatically</span>
+              <input id="autoplay-input" type="checkbox" />
+            </label>
+
+            <div class="side-group side-group-compact">
+              <span class="side-key">Current folder</span>
+              <span id="selected-grid-folder" class="side-value">No folder selected yet</span>
+            </div>
+
+            <button id="start-slideshow" type="button" class="primary-cta">
+              Start Slideshow
+            </button>
+          </div>
+        </aside>
+      </section>
+    </div>
+
+    <div id="slideshow" class="slideshow hidden" aria-hidden="true">
+      <div class="slideshow-frame">
+        <div class="slideshow-head">
+          <div class="brand-lockup">DRIVEDECK</div>
+          <div class="slideshow-head-actions">
+            <button id="toggle-settings" type="button" class="icon-action" aria-label="Open slideshow settings">⚙</button>
+            <button id="close-slideshow" type="button" class="icon-action icon-action-close" aria-label="Close slideshow">CLOSE</button>
+          </div>
+        </div>
+
+        <div class="slide-caption">
+          <h2 id="slide-title" class="slide-title">SCULPTED BY LIGHT</h2>
+          <p id="slide-meta" class="slide-meta-line">EXPOSURE_042 // ISO_100</p>
+        </div>
+
+        <img id="slide-image" class="slide-image" alt="" />
+
+        <div class="slide-counter-block">
+          <div id="slide-position" class="slide-position">001</div>
+          <div class="slide-counter-label">NOW SHOWING</div>
+        </div>
+
+        <div class="slide-dock">
+          <button id="prev-slide" type="button" class="dock-button">|◀</button>
+          <button id="play-pause" type="button" class="dock-button dock-button-emphasis">▶</button>
+          <button id="next-slide" type="button" class="dock-button">▶|</button>
+          <button id="dock-settings" type="button" class="dock-button" aria-label="Open slideshow settings">⚙</button>
+        </div>
+
+        <div id="slideshow-settings" class="slideshow-settings hidden">
+          <div class="slideshow-settings-head">
+            <button id="close-slideshow-settings" type="button" class="icon-action icon-action-close-panel" aria-label="Close settings">
+              Close
+            </button>
+          </div>
+          <p class="side-title">DRIVEDECK</p>
+          <p class="side-subtitle">SLIDESHOW SETTINGS</p>
+
+          <div class="side-group">
+            <div class="side-row">
+              <span class="side-key">Interval duration</span>
+              <span id="slide-duration-readout" class="side-value">8.0s</span>
+            </div>
+            <div class="counter-control">
+              <button id="slide-duration-decrease" type="button" class="counter-button" aria-label="Decrease interval duration">-</button>
+              <div id="slide-duration-count" class="counter-value" aria-live="polite">8s</div>
+              <button id="slide-duration-increase" type="button" class="counter-button" aria-label="Increase interval duration">+</button>
+            </div>
+          </div>
+
+          <label class="toggle-row">
+            <span class="side-key">Loop playback</span>
+            <input id="slide-loop-input" type="checkbox" />
+          </label>
+
+          <label class="toggle-row">
+            <span class="side-key">Autoplay active</span>
+            <input id="slide-autoplay-input" type="checkbox" />
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <script src="/qr.js"></script>
+    <script src="/app.js"></script>
+  </body>
+</html>

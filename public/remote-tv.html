@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DriveDeck Remote TV Pairing</title>
+    <link rel="stylesheet" href="/remote-tv.css" />
+  </head>
+  <body>
+    <main class="remote-page">
+      <section class="remote-shell">
+        <div class="remote-brand-row">
+          <p class="remote-eyebrow">DriveDeck Remote</p>
+          <p class="remote-version">TV Pairing</p>
+        </div>
+
+        <div class="remote-hero">
+          <h1>Send a Google Drive folder to DriveDeck TV.</h1>
+          <p class="remote-subtitle">
+            Paste the folder link below and we’ll turn it into a 6 digit code you can enter on your TV.
+          </p>
+        </div>
+
+        <section class="remote-result-panel" aria-live="polite">
+          <div class="remote-result-header">
+            <p class="remote-result-label">Your Pairing Code</p>
+            <button id="copy-code-button" type="button" class="remote-copy-button" aria-label="Copy code">
+              Copy
+            </button>
+          </div>
+          <p id="remote-code" class="remote-code">------</p>
+          <p class="remote-result-note">Enter this code on your TV to open the folder.</p>
+        </section>
+
+        <form id="remote-form" class="remote-form">
+          <label for="remote-url">Google Drive folder link</label>
+          <textarea
+            id="remote-url"
+            name="remote-url"
+            rows="4"
+            placeholder="https://drive.google.com/drive/folders/..."
+            required
+          ></textarea>
+          <button type="submit">Create Code</button>
+        </form>
+
+        <button id="new-code-button" type="button" class="remote-tertiary-button hidden">
+          Create Another Code
+        </button>
+
+        <div class="remote-footer">
+          <p class="remote-expiry-note">
+            Each code stays active for 2 days. After that, just create a fresh one.
+          </p>
+          <p id="remote-status" class="remote-status"></p>
+        </div>
+      </section>
+    </main>
+
+    <script src="/remote-tv.js"></script>
+  </body>
+</html>

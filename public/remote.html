@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DriveDeck Pairing</title>
+    <link rel="stylesheet" href="/remote.css" />
+  </head>
+  <body>
+    <main class="remote-page">
+      <p class="remote-eyebrow">DriveDeck Pairing</p>
+      <h1>Send a Google Drive folder to your TV.</h1>
+      <div class="remote-result">
+        <p class="remote-result-label">Your Pairing Code</p>
+        <div class="remote-code-row">
+          <p id="remote-code" class="remote-code">------</p>
+          <button id="copy-code-button" type="button" class="remote-copy-button" aria-label="Copy code">
+            Copy
+          </button>
+        </div>
+      </div>
+
+      <form id="remote-form" class="remote-form">
+        <label for="remote-url">Google Drive folder link</label>
+        <textarea
+          id="remote-url"
+          name="remote-url"
+          rows="4"
+          placeholder="https://drive.google.com/drive/folders/..."
+          required
+        ></textarea>
+        <button type="submit">Create Code</button>
+      </form>
+      <button id="new-code-button" type="button" class="remote-tertiary-button hidden">
+        Create Another Code
+      </button>
+
+      <p class="remote-expiry-note">
+        Each code stays active for 2 days. After that, just create a fresh one.
+      </p>
+      <p id="remote-status" class="remote-status"></p>
+    </main>
+
+    <script src="/remote.js"></script>
+  </body>
+</html>
