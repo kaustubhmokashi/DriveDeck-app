@@ -1,0 +1,12 @@
+{
+  "name": "drivedeck",
+  "version": "1.0.0",
+  "private": true,
+  "description": "DriveDeck TV slideshow app for public Google Drive folders",
+  "dependencies": {
+    "firebase-admin": "^13.0.0"
+  },
+  "scripts": {
+    "start": "node server.js"
+  }
+}
