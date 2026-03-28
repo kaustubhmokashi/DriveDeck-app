@@ -280,6 +280,24 @@ h1 {
   color: #ffb4ac;
 }
 
+.delete-feedback {
+  font-weight: 700;
+  font-size: 0.98rem;
+  line-height: 1.5;
+}
+
+.delete-feedback.hidden {
+  display: none;
+}
+
+.delete-feedback.is-success {
+  color: #4ade80;
+}
+
+.delete-feedback.is-error {
+  color: #ff6b6b;
+}
+
 @media (hover: hover) {
   .remote-form button:hover,
   .remote-copy-button:hover {

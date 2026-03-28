@@ -11,6 +11,7 @@ const cancelDeleteButton = document.getElementById("cancel-delete-button");
 const deleteForm = document.getElementById("remote-delete-form");
 const deleteCodeInput = document.getElementById("delete-code");
 const deleteUrlInput = document.getElementById("delete-url");
+const deleteFeedbackEl = document.getElementById("delete-feedback");
 const permanentCheckbox = document.getElementById("remote-permanent");
 
 let latestCode = "";
@@ -25,6 +26,13 @@ function buildShareMessage() {
 function setRemoteStatus(message, isError = false) {
   remoteStatusEl.textContent = message;
   remoteStatusEl.classList.toggle("is-error", isError);
+}
+
+function setDeleteFeedback(message = "", tone = "") {
+  deleteFeedbackEl.textContent = message;
+  deleteFeedbackEl.classList.toggle("hidden", !message);
+  deleteFeedbackEl.classList.toggle("is-success", tone === "success");
+  deleteFeedbackEl.classList.toggle("is-error", tone === "error");
 }
 
 function setResultMode(isResultMode) {
@@ -43,9 +51,11 @@ function setDeleteMode(enabled) {
   remoteResultPanel.classList.toggle("hidden", enabled || !latestCode);
 
   if (enabled) {
+    setDeleteFeedback();
     setRemoteStatus("Enter the code and original Drive link to delete it.");
     deleteCodeInput.focus();
   } else {
+    setDeleteFeedback();
     setRemoteStatus(latestCode ? `You’re all set. Enter ${latestCode} on your TV to continue.` : "Paste a Google Drive link whenever you're ready.");
     remoteUrlInput.focus();
   }
@@ -149,12 +159,12 @@ deleteForm.addEventListener("submit", async (event) => {
   const code = deleteCodeInput.value.trim();
   const url = deleteUrlInput.value.trim();
   if (!code || !url) {
-    setRemoteStatus("Enter the code and original Google Drive link to continue.", true);
+    setDeleteFeedback("Enter the code and original Google Drive link to continue.", "error");
     return;
   }
 
   try {
-    setRemoteStatus("Deleting code...");
+    setDeleteFeedback();
     const response = await fetch("/api/remote/delete", {
       method: "POST",
       headers: {
@@ -175,9 +185,9 @@ deleteForm.addEventListener("submit", async (event) => {
       remoteCodeEl.textContent = "---------";
       setResultMode(false);
     }
-    setDeleteMode(false);
-    setRemoteStatus("Code deleted.");
+    setDeleteFeedback("Code deleted successfully.", "success");
+    setRemoteStatus("");
   } catch (error) {
-    setRemoteStatus(error.message, true);
+    setDeleteFeedback(error.message, "error");
   }
 });

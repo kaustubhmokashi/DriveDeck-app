@@ -167,3 +167,20 @@ input {
   line-height: 1.6;
   letter-spacing: 0.08em;
 }
+
+.delete-feedback {
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+.delete-feedback.hidden {
+  display: none;
+}
+
+.delete-feedback.is-success {
+  color: #4ade80;
+}
+
+.delete-feedback.is-error {
+  color: #ff6b6b;
+}
