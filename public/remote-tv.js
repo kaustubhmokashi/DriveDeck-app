@@ -21,6 +21,8 @@ remoteForm.addEventListener("submit", async (event) => {
   event.preventDefault();
 
   const url = remoteUrlInput.value.trim();
+  const codeType = new FormData(remoteForm).get("code-type");
+  const permanent = codeType === "permanent";
   if (!url) {
     setRemoteStatus("Paste a Google Drive folder link to get started.", true);
     return;
@@ -34,7 +36,7 @@ remoteForm.addEventListener("submit", async (event) => {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ url }),
+      body: JSON.stringify({ url, permanent }),
     });
 
     const data = await response.json();
@@ -68,7 +70,7 @@ copyCodeButton.addEventListener("click", async () => {
 
 newCodeButton.addEventListener("click", () => {
   latestCode = "";
-  remoteCodeEl.textContent = "------";
+  remoteCodeEl.textContent = "---------";
   setResultMode(false);
   setRemoteStatus("Paste another Google Drive link whenever you're ready.");
   remoteUrlInput.focus();

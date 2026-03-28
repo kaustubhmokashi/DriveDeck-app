@@ -149,6 +149,24 @@ h1 {
   gap: 12px;
 }
 
+.remote-code-type {
+  display: grid;
+  gap: 10px;
+  padding: 4px 2px 2px;
+}
+
+.remote-code-type-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.remote-code-type-option input {
+  accent-color: var(--accent);
+}
+
 .remote-form.hidden {
   display: none;
 }

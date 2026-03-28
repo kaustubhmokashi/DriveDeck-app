@@ -68,6 +68,9 @@ const VIDEO_MIME_PREFIX = "video/";
 const FOLDER_MIME_TYPE = "application/vnd.google-apps.folder";
 let firestoreDb = null;
 
+const DRIVE_LINK_ACCESS_ERROR =
+  "We couldn’t open that Google Drive folder. Make sure the link is correct and the folder is shared as 'Anyone with the link' with Viewer access, then try again.";
+
 function ensureDataStore() {
   if (!fs.existsSync(DATA_DIR)) {
     fs.mkdirSync(DATA_DIR, { recursive: true });
@@ -87,35 +90,45 @@ function readRemoteMappings() {
     .map((line) => line.trim())
     .filter(Boolean)
     .map((line) => {
-      const [code, url, createdAt] = line.split("\t");
-      return { code, url, createdAt };
+      const [code, url, createdAt, permanentFlag] = line.split("\t");
+      return { code, url, createdAt, permanent: permanentFlag === "1" };
     });
 }
 
 function writeRemoteMappings(mappings) {
   ensureDataStore();
   const body = mappings
-    .map((entry) => [entry.code, entry.url || "", entry.createdAt || ""].join("\t"))
+    .map((entry) =>
+      [entry.code, entry.url || "", entry.createdAt || "", entry.permanent ? "1" : "0"].join("\t")
+    )
     .join("\n");
   fs.writeFileSync(REMOTE_CODES_FILE, body ? `${body}\n` : "", "utf8");
 }
 
 function generateRemoteCode() {
+  return generateNumericCode(6);
+}
+
+function generatePermanentRemoteCode() {
+  return generateNumericCode(9);
+}
+
+function generateNumericCode(length) {
   const mappings = readRemoteMappings();
   let code = "";
 
   do {
-    code = String(Math.floor(100000 + Math.random() * 900000));
+    code = Array.from({ length }, () => Math.floor(Math.random() * 10)).join("");
   } while (mappings.some((entry) => entry.code === code));
 
   return code;
 }
 
-async function generateUniqueRemoteCode(codeExists) {
+async function generateUniqueRemoteCode(codeExists, createCode = generateRemoteCode) {
   let code = "";
 
   do {
-    code = String(Math.floor(100000 + Math.random() * 900000));
+    code = createCode();
   } while (await codeExists(code));
 
   return code;
@@ -186,9 +199,16 @@ function isExpired(createdAt) {
   return Date.now() - timestamp > CODE_EXPIRY_MS;
 }
 
+function isEntryExpired(entry) {
+  if (entry?.permanent) {
+    return false;
+  }
+  return isExpired(entry?.createdAt);
+}
+
 function pruneExpiredMappings() {
   const mappings = readRemoteMappings();
-  const activeMappings = mappings.filter((entry) => !isExpired(entry.createdAt));
+  const activeMappings = mappings.filter((entry) => !isEntryExpired(entry));
 
   if (activeMappings.length !== mappings.length) {
     writeRemoteMappings(activeMappings);
@@ -197,23 +217,26 @@ function pruneExpiredMappings() {
   return activeMappings;
 }
 
-async function writeRemoteLinkToStore(url) {
+async function writeRemoteLinkToStore(url, permanent = false) {
   const normalizedUrl = normalizeRemoteUrl(url);
   const db = getFirestoreDb();
 
   if (!db) {
     const mappings = pruneExpiredMappings();
-    const existingEntry = mappings.find((entry) => normalizeRemoteUrl(entry.url) === normalizedUrl);
+    const existingEntry = mappings.find(
+      (entry) => normalizeRemoteUrl(entry.url) === normalizedUrl && Boolean(entry.permanent) === permanent
+    );
 
     if (existingEntry) {
       return { success: true, code: existingEntry.code, reused: true, store: "file" };
     }
 
-    const code = generateRemoteCode();
+    const code = permanent ? generatePermanentRemoteCode() : generateRemoteCode();
     mappings.push({
       code,
       url: normalizedUrl,
       createdAt: new Date().toISOString(),
+      permanent,
     });
     writeRemoteMappings(mappings);
     return { success: true, code, reused: false, store: "file" };
@@ -230,12 +253,12 @@ async function writeRemoteLinkToStore(url) {
 
   duplicateSnapshot.forEach((doc) => {
     const data = doc.data();
-    if (isExpired(data.createdAt)) {
+    if (isEntryExpired(data)) {
       expiredDocs.push(doc.ref.delete());
       return;
     }
 
-    if (!reusableEntry) {
+    if (!reusableEntry && Boolean(data.permanent) === permanent) {
       reusableEntry = { code: doc.id, ...data };
     }
   });
@@ -251,13 +274,14 @@ async function writeRemoteLinkToStore(url) {
   const code = await generateUniqueRemoteCode(async (candidate) => {
     const existingDoc = await collection.doc(candidate).get();
     return existingDoc.exists;
-  });
+  }, permanent ? generatePermanentRemoteCode : generateRemoteCode);
 
   const createdAt = new Date().toISOString();
   await collection.doc(code).set({
     url: normalizedUrl,
     normalizedUrl,
     createdAt,
+    permanent,
   });
 
   return { success: true, code, reused: false, store: "firestore" };
@@ -286,7 +310,7 @@ async function resolveRemoteLinkFromStore(code) {
   }
 
   const data = doc.data() || {};
-  if (isExpired(data.createdAt)) {
+  if (isEntryExpired(data)) {
     await doc.ref.delete();
     return null;
   }
@@ -537,6 +561,22 @@ async function driveGetFile(fileId) {
   return response.json();
 }
 
+function formatDriveAccessError(error) {
+  const message = String(error?.message || "");
+  if (
+    message.includes("Drive metadata request failed (404)") ||
+    message.includes("Drive metadata request failed (403)") ||
+    message.includes("File not found") ||
+    message.includes("notFound") ||
+    message.includes("insufficientFilePermissions") ||
+    message.includes("The user does not have sufficient permissions")
+  ) {
+    return DRIVE_LINK_ACCESS_ERROR;
+  }
+
+  return message || "We couldn’t verify that Google Drive folder right now.";
+}
+
 function createImageUrl(fileId, mode = "full") {
   const url = new URL("/api/image", "http://localhost");
   url.searchParams.set("id", fileId);
@@ -664,7 +704,7 @@ async function handleApiFolder(req, res) {
     sendJson(res, 200, result);
   } catch (error) {
     sendJson(res, 500, {
-      error: error.message,
+      error: formatDriveAccessError(error),
     });
   }
 }
@@ -703,7 +743,7 @@ async function handleApiFolderMeta(req, res) {
     });
   } catch (error) {
     sendJson(res, 500, {
-      error: error.message,
+      error: formatDriveAccessError(error),
     });
   }
 }
@@ -712,13 +752,41 @@ async function handleSaveRemoteLink(req, res) {
   try {
     const body = await readRequestBody(req);
     const url = normalizeRemoteUrl(body.url);
+    const permanent = body.permanent === true;
 
     if (!url) {
       sendJson(res, 400, { error: "A Google Drive URL is required." });
       return;
     }
 
-    const result = await writeRemoteLinkToStore(url);
+    if (!API_KEY) {
+      sendJson(res, 500, {
+        error:
+          "Missing GOOGLE_DRIVE_API_KEY environment variable. Add it before starting the server.",
+      });
+      return;
+    }
+
+    const folderId = extractFolderId(url);
+    if (!folderId) {
+      sendJson(res, 400, {
+        error: "Please paste a valid Google Drive folder link.",
+      });
+      return;
+    }
+
+    try {
+      const folderMeta = await driveGetFile(folderId);
+      if (folderMeta.mimeType !== FOLDER_MIME_TYPE) {
+        sendJson(res, 400, { error: "The provided link does not point to a Google Drive folder." });
+        return;
+      }
+    } catch (error) {
+      sendJson(res, 400, { error: formatDriveAccessError(error) });
+      return;
+    }
+
+    const result = await writeRemoteLinkToStore(url, permanent);
     sendJson(res, 200, result);
   } catch (error) {
     sendJson(res, 400, { error: error.message || "Invalid request body." });
@@ -729,8 +797,8 @@ async function handleResolveRemoteCode(req, res) {
   const requestUrl = new URL(req.url, `http://${req.headers.host}`);
   const code = String(requestUrl.searchParams.get("code") || "").trim();
 
-  if (!/^\d{6}$/.test(code)) {
-    sendJson(res, 400, { error: "Code must be a 6 digit number." });
+  if (!/^\d{6}$|^\d{9}$/.test(code)) {
+    sendJson(res, 400, { error: "Code must be a 6 or 9 digit number." });
     return;
   }
 

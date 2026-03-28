@@ -17,7 +17,7 @@
         <div class="remote-hero">
           <h1>Send a Google Drive folder to DriveDeck TV.</h1>
           <p class="remote-subtitle">
-            Paste the folder link below and we’ll turn it into a 6 digit code you can enter on your TV.
+            Paste the folder link below and we’ll turn it into a 6 digit temporary code or a 9 digit permanent code you can enter on your TV.
           </p>
         </div>
 
@@ -28,7 +28,7 @@
               Copy
             </button>
           </div>
-          <p id="remote-code" class="remote-code">------</p>
+          <p id="remote-code" class="remote-code">---------</p>
           <p class="remote-result-note">Enter this code on your TV to open the folder.</p>
         </section>
 
@@ -41,6 +41,16 @@
             placeholder="https://drive.google.com/drive/folders/..."
             required
           ></textarea>
+          <div class="remote-code-type" role="radiogroup" aria-label="Code type">
+            <label class="remote-code-type-option">
+              <input type="radio" name="code-type" value="temporary" checked />
+              <span>6 digit temporary code</span>
+            </label>
+            <label class="remote-code-type-option">
+              <input type="radio" name="code-type" value="permanent" />
+              <span>9 digit permanent code</span>
+            </label>
+          </div>
           <button type="submit">Create Code</button>
         </form>
 
@@ -50,7 +60,7 @@
 
         <div class="remote-footer">
           <p class="remote-expiry-note">
-            Each code stays active for 2 days. After that, just create a fresh one.
+            6 digit codes stay active for 2 days. 9 digit codes stay active until you change or remove the folder.
           </p>
           <p id="remote-status" class="remote-status"></p>
         </div>

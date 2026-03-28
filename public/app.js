@@ -940,8 +940,8 @@ async function resolvePairingCode(code) {
 codeForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   const code = pairingCodeInput.value.trim();
-  if (!/^\d{6}$/.test(code)) {
-    setStatus("Please enter a 6 digit pairing code.", true);
+  if (!/^\d{6}$|^\d{9}$/.test(code)) {
+    setStatus("Please enter a 6 or 9 digit pairing code.", true);
     return;
   }
 
