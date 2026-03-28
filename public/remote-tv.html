@@ -41,26 +41,48 @@
             placeholder="https://drive.google.com/drive/folders/..."
             required
           ></textarea>
-          <div class="remote-code-type" role="radiogroup" aria-label="Code type">
-            <label class="remote-code-type-option">
-              <input type="radio" name="code-type" value="temporary" checked />
-              <span>6 digit temporary code</span>
-            </label>
-            <label class="remote-code-type-option">
-              <input type="radio" name="code-type" value="permanent" />
-              <span>9 digit permanent code</span>
-            </label>
-          </div>
+          <label class="remote-checkbox-option">
+            <input id="remote-permanent" type="checkbox" name="remote-permanent" />
+            <span>Create a permanent code</span>
+          </label>
           <button type="submit">Create Code</button>
+        </form>
+
+        <form id="remote-delete-form" class="remote-form hidden">
+          <label for="delete-code">Code</label>
+          <input
+            id="delete-code"
+            name="delete-code"
+            class="remote-input"
+            inputmode="numeric"
+            autocomplete="off"
+            placeholder="Enter the permanent code"
+            required
+          />
+          <label for="delete-url">Original Google Drive folder link</label>
+          <textarea
+            id="delete-url"
+            name="delete-url"
+            rows="4"
+            placeholder="https://drive.google.com/drive/folders/..."
+            required
+          ></textarea>
+          <button type="submit">Delete Permanent Code</button>
         </form>
 
         <button id="new-code-button" type="button" class="remote-tertiary-button hidden">
           Create Another Code
         </button>
+        <button id="delete-mode-button" type="button" class="remote-tertiary-button">
+          Delete permanent codes
+        </button>
+        <button id="cancel-delete-button" type="button" class="remote-tertiary-button hidden">
+          Back to code creation
+        </button>
 
         <div class="remote-footer">
           <p class="remote-expiry-note">
-            6 digit codes stay active for 2 days. 9 digit codes stay active until you change or remove the folder.
+            Temporary codes stay active for 2 days. Permanent codes stay active until you change or remove the folder.
           </p>
           <p id="remote-status" class="remote-status"></p>
         </div>
