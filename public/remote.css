@@ -149,7 +149,7 @@ input {
 }
 
 .remote-tertiary-button {
-  justify-self: start;
+  justify-self: center;
   padding: 0;
   color: var(--muted);
   text-transform: uppercase;

@@ -323,6 +323,40 @@ async function resolveRemoteLinkFromStore(code) {
   };
 }
 
+async function deleteRemoteCode(code, url) {
+  const normalizedUrl = normalizeRemoteUrl(url);
+  const db = getFirestoreDb();
+
+  if (!db) {
+    const mappings = pruneExpiredMappings();
+    const entry = mappings.find((item) => item.code === code);
+    if (!entry) {
+      return { deleted: false };
+    }
+
+    if (normalizeRemoteUrl(entry.url) !== normalizedUrl) {
+      return { deleted: false };
+    }
+
+    writeRemoteMappings(mappings.filter((item) => item.code !== code));
+    return { deleted: true, store: "file" };
+  }
+
+  const docRef = db.collection(FIREBASE_COLLECTION).doc(code);
+  const doc = await docRef.get();
+  if (!doc.exists) {
+    return { deleted: false };
+  }
+
+  const data = doc.data() || {};
+  if (normalizeRemoteUrl(data.url) !== normalizedUrl) {
+    return { deleted: false };
+  }
+
+  await docRef.delete();
+  return { deleted: true, store: "firestore" };
+}
+
 function readRequestBody(req) {
   return new Promise((resolve, reject) => {
     let body = "";
@@ -775,8 +809,9 @@ async function handleSaveRemoteLink(req, res) {
       return;
     }
 
+    let folderMeta;
     try {
-      const folderMeta = await driveGetFile(folderId);
+      folderMeta = await driveGetFile(folderId);
       if (folderMeta.mimeType !== FOLDER_MIME_TYPE) {
         sendJson(res, 400, { error: "The provided link does not point to a Google Drive folder." });
         return;
@@ -787,7 +822,10 @@ async function handleSaveRemoteLink(req, res) {
     }
 
     const result = await writeRemoteLinkToStore(url, permanent);
-    sendJson(res, 200, result);
+    sendJson(res, 200, {
+      ...result,
+      folderName: folderMeta?.name || "Google Drive folder",
+    });
   } catch (error) {
     sendJson(res, 400, { error: error.message || "Invalid request body." });
   }
@@ -813,6 +851,39 @@ async function handleResolveRemoteCode(req, res) {
     url: entry.url || "",
     ready: Boolean(entry.url),
   });
+}
+
+async function handleDeleteRemoteCode(req, res) {
+  try {
+    const body = await readRequestBody(req);
+    const code = String(body.code || "").trim();
+    const url = normalizeRemoteUrl(body.url);
+
+    if (!/^\d{6}$|^\d{9}$/.test(code)) {
+      sendJson(res, 400, { error: "Please enter the full code." });
+      return;
+    }
+
+    if (!url) {
+      sendJson(res, 400, { error: "Please paste the original Google Drive folder link." });
+      return;
+    }
+
+    const result = await deleteRemoteCode(code, url);
+    if (!result.deleted) {
+      sendJson(res, 404, {
+        error: "We couldn’t match that code with the Google Drive link provided.",
+      });
+      return;
+    }
+
+    sendJson(res, 200, {
+      success: true,
+      message: "Code deleted.",
+    });
+  } catch (error) {
+    sendJson(res, 400, { error: error.message || "Invalid request body." });
+  }
 }
 
 async function handlePairingOrigin(req, res) {
@@ -864,6 +935,11 @@ const server = http.createServer(async (req, res) => {
 
   if (requestUrl.pathname === "/api/remote/resolve") {
     await handleResolveRemoteCode(req, res);
+    return;
+  }
+
+  if (requestUrl.pathname === "/api/remote/delete" && req.method === "POST") {
+    await handleDeleteRemoteCode(req, res);
     return;
   }
 

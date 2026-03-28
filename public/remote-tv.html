@@ -24,9 +24,14 @@
         <section class="remote-result-panel" aria-live="polite">
           <div class="remote-result-header">
             <p class="remote-result-label">Your Pairing Code</p>
-            <button id="copy-code-button" type="button" class="remote-copy-button" aria-label="Copy code">
-              Copy
-            </button>
+            <div class="remote-result-actions">
+              <button id="share-code-button" type="button" class="remote-copy-button" aria-label="Share code">
+                Share
+              </button>
+              <button id="copy-code-button" type="button" class="remote-copy-button" aria-label="Copy code">
+                Copy
+              </button>
+            </div>
           </div>
           <p id="remote-code" class="remote-code">---------</p>
           <p class="remote-result-note">Enter this code on your TV to open the folder.</p>
@@ -56,7 +61,7 @@
             class="remote-input"
             inputmode="numeric"
             autocomplete="off"
-            placeholder="Enter the permanent code"
+            placeholder="Enter the code"
             required
           />
           <label for="delete-url">Original Google Drive folder link</label>
@@ -67,14 +72,14 @@
             placeholder="https://drive.google.com/drive/folders/..."
             required
           ></textarea>
-          <button type="submit">Delete Permanent Code</button>
+          <button type="submit">Delete Code</button>
         </form>
 
         <button id="new-code-button" type="button" class="remote-tertiary-button hidden">
           Create Another Code
         </button>
         <button id="delete-mode-button" type="button" class="remote-tertiary-button">
-          Delete permanent codes
+          Delete a code
         </button>
         <button id="cancel-delete-button" type="button" class="remote-tertiary-button hidden">
           Back to code creation

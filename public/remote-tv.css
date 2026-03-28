@@ -68,6 +68,12 @@ input {
   gap: 16px;
 }
 
+.remote-result-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .remote-eyebrow,
 .remote-version,
 .remote-form label,
@@ -249,7 +255,7 @@ h1 {
 }
 
 .remote-tertiary-button {
-  justify-self: start;
+  justify-self: center;
   padding: 0;
   border: 0;
   background: transparent;
