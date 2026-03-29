@@ -459,14 +459,9 @@ async function proxyDriveImage(req, res) {
     let lastError = "Unable to fetch media from Google Drive.";
 
     for (const candidate of candidates) {
-      const headers = {};
-      if (rangeHeader) {
-        headers.Range = rangeHeader;
-      }
-
       const response = await fetch(candidate, {
         redirect: "follow",
-        headers,
+        headers: rangeHeader ? { Range: rangeHeader } : undefined,
       });
       const contentType = response.headers.get("content-type") || "";
 
@@ -484,17 +479,18 @@ async function proxyDriveImage(req, res) {
         "Content-Type": contentType,
         "Cache-Control": "public, max-age=3600",
       };
+      const contentLength = response.headers.get("content-length");
+      const contentRange = response.headers.get("content-range");
+      const acceptRanges = response.headers.get("accept-ranges");
 
-      for (const [source, target] of [
-        ["accept-ranges", "Accept-Ranges"],
-        ["content-length", "Content-Length"],
-        ["content-range", "Content-Range"],
-        ["content-disposition", "Content-Disposition"],
-      ]) {
-        const value = response.headers.get(source);
-        if (value) {
-          responseHeaders[target] = value;
-        }
+      if (contentLength) {
+        responseHeaders["Content-Length"] = contentLength;
+      }
+      if (contentRange) {
+        responseHeaders["Content-Range"] = contentRange;
+      }
+      if (acceptRanges || contentRange || rangeHeader) {
+        responseHeaders["Accept-Ranges"] = acceptRanges || "bytes";
       }
 
       res.writeHead(response.status, responseHeaders);
@@ -912,15 +908,11 @@ async function handleDeleteRemoteCode(req, res) {
 async function handlePairingOrigin(req, res) {
   const requestUrl = new URL(req.url, `http://${req.headers.host}`);
   const hostHeader = req.headers.host || "";
-  const forwardedProto = String(req.headers["x-forwarded-proto"] || "")
-    .split(",")[0]
-    .trim()
-    .replace(/:$/, "");
-  const protocol = (forwardedProto || requestUrl.protocol.replace(/:$/, "") || "http");
+  const protocol = requestUrl.protocol;
   const hostName = hostHeader.split(":")[0];
   const port = hostHeader.includes(":") ? hostHeader.split(":")[1] : String(PORT);
 
-  let origin = `${protocol}://${hostHeader}`;
+  let origin = `${protocol}//${hostHeader}`;
   if (
     !hostName ||
     hostName === "localhost" ||
@@ -930,7 +922,7 @@ async function handlePairingOrigin(req, res) {
   ) {
     const lanIp = getPreferredLanIp();
     if (lanIp) {
-      origin = `${protocol}://${lanIp}:${port}`;
+      origin = `${protocol}//${lanIp}:${port}`;
     }
   }
 
