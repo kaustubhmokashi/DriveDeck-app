@@ -612,19 +612,15 @@ function formatDriveAccessError(error) {
 }
 
 function createImageUrl(fileId, mode = "full") {
-  if (mode === "thumb") {
-    return `https://drive.google.com/thumbnail?id=${encodeURIComponent(fileId)}&sz=w480`;
+  const url = new URL("/api/image", "http://localhost");
+  url.searchParams.set("id", fileId);
+  if (mode === "thumb" || mode === "screen") {
+    url.searchParams.set("mode", "thumb");
+    if (mode === "screen") {
+      url.searchParams.set("mode", "screen");
+    }
   }
-
-  if (mode === "screen") {
-    return `https://drive.google.com/thumbnail?id=${encodeURIComponent(fileId)}&sz=w1920`;
-  }
-
-  return `https://lh3.googleusercontent.com/d/${encodeURIComponent(fileId)}=w2400`;
-}
-
-function createDirectVideoUrl(fileId) {
-  return `https://www.googleapis.com/drive/v3/files/${encodeURIComponent(fileId)}?alt=media&key=${encodeURIComponent(API_KEY)}`;
+  return `${url.pathname}${url.search}`;
 }
 
 function isSupportedMediaFile(file, includeVideos = false) {
@@ -681,19 +677,14 @@ async function readFolderTree(folderId, rootName = "Root Folder", includeVideos 
           continue;
         }
 
-        const isVideo = file.mimeType.startsWith(VIDEO_MIME_PREFIX);
-        const fullMediaUrl = isVideo
-          ? createDirectVideoUrl(file.id)
-          : createImageUrl(file.id, "full");
-
         const image = {
           id: file.id,
           name: file.name,
           mimeType: file.mimeType,
           path: current.path || "",
-          url: fullMediaUrl,
-          slideshowUrl: isVideo
-            ? fullMediaUrl
+          url: createImageUrl(file.id, "full"),
+          slideshowUrl: file.mimeType.startsWith(VIDEO_MIME_PREFIX)
+            ? createImageUrl(file.id, "full")
             : createImageUrl(file.id, "screen"),
           thumbnailUrl: createImageUrl(file.id, "thumb"),
           webViewLink: file.webViewLink || "",
