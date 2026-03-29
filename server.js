@@ -908,11 +908,15 @@ async function handleDeleteRemoteCode(req, res) {
 async function handlePairingOrigin(req, res) {
   const requestUrl = new URL(req.url, `http://${req.headers.host}`);
   const hostHeader = req.headers.host || "";
-  const protocol = requestUrl.protocol;
+  const forwardedProto = String(req.headers["x-forwarded-proto"] || "")
+    .split(",")[0]
+    .trim()
+    .replace(/:$/, "");
+  const protocol = forwardedProto || requestUrl.protocol.replace(/:$/, "") || "http";
   const hostName = hostHeader.split(":")[0];
   const port = hostHeader.includes(":") ? hostHeader.split(":")[1] : String(PORT);
 
-  let origin = `${protocol}//${hostHeader}`;
+  let origin = `${protocol}://${hostHeader}`;
   if (
     !hostName ||
     hostName === "localhost" ||
@@ -922,7 +926,7 @@ async function handlePairingOrigin(req, res) {
   ) {
     const lanIp = getPreferredLanIp();
     if (lanIp) {
-      origin = `${protocol}//${lanIp}:${port}`;
+      origin = `${protocol}://${lanIp}:${port}`;
     }
   }
 
