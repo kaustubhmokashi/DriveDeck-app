@@ -418,6 +418,7 @@ async function proxyDriveImage(req, res) {
   const requestedMode = requestUrl.searchParams.get("mode");
   const mode =
     requestedMode === "thumb" || requestedMode === "screen" ? requestedMode : "full";
+  const rangeHeader = req.headers.range;
 
   if (!API_KEY) {
     sendJson(res, 500, {
@@ -458,7 +459,15 @@ async function proxyDriveImage(req, res) {
     let lastError = "Unable to fetch media from Google Drive.";
 
     for (const candidate of candidates) {
-      const response = await fetch(candidate, { redirect: "follow" });
+      const headers = {};
+      if (rangeHeader) {
+        headers.Range = rangeHeader;
+      }
+
+      const response = await fetch(candidate, {
+        redirect: "follow",
+        headers,
+      });
       const contentType = response.headers.get("content-type") || "";
 
       if (!response.ok) {
@@ -471,10 +480,24 @@ async function proxyDriveImage(req, res) {
         continue;
       }
 
-      res.writeHead(200, {
+      const responseHeaders = {
         "Content-Type": contentType,
         "Cache-Control": "public, max-age=3600",
-      });
+      };
+
+      for (const [source, target] of [
+        ["accept-ranges", "Accept-Ranges"],
+        ["content-length", "Content-Length"],
+        ["content-range", "Content-Range"],
+        ["content-disposition", "Content-Disposition"],
+      ]) {
+        const value = response.headers.get(source);
+        if (value) {
+          responseHeaders[target] = value;
+        }
+      }
+
+      res.writeHead(response.status, responseHeaders);
 
       for await (const chunk of response.body) {
         res.write(chunk);
