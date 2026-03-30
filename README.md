@@ -54,3 +54,9 @@ drivedeckPairingUrl=
 ```
 
 For Render deployment, the Firebase JSON file itself should not be committed. Use the `FIREBASE_SERVICE_ACCOUNT_BASE64` environment variable in the Render dashboard instead.
+
+## Privacy Policy
+
+Once deployed, a hosted privacy policy page is available at:
+
+`https://your-render-service.onrender.com/privacy-policy`

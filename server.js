@@ -976,6 +976,8 @@ const server = http.createServer(async (req, res) => {
           ? "/index.html"
           : requestUrl.pathname === "/gallery"
             ? "/index.html"
+      : requestUrl.pathname === "/privacy-policy"
+        ? "/privacy-policy.html"
       : requestUrl.pathname === "/remote"
         ? "/remote.html"
         : requestUrl.pathname === "/remote-tv"
